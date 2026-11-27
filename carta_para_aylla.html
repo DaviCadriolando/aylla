@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Correio Estrelado • Carta 16-Bit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --sky-deep: #0b0e1d;
+            --sky-mid: #181c3a;
+            --sky-twilight: #25224a;
+            --parchment-light: #fffdf7;
+            --parchment-mid: #f7eedc;
+            --parchment-edge: #e6d5b8;
+            --ink-primary: #241612;
+            --ink-muted: #694735;
+            --gold-bright: #ffd166;
+            --rose-vivid: #ff5c8a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--sky-deep) 0%, var(--sky-mid) 50%, var(--sky-twilight) 100%);
+            color: var(--ink-primary);
+            font-family: 'Pixelify Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-rpg-title {
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .font-rpg-ui {
+            font-family: 'Silkscreen', monospace;
+        }
+
+        .font-rpg-body {
+            font-family: 'Pixelify Sans', sans-serif;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Caixa de Diálogo / Pergaminho Estilo Pokémon GBA & DS */
+        .rpg-dialogue-box {
+            background-color: var(--parchment-light);
+            background-image:
+                radial-gradient(rgba(138, 94, 54, 0.06) 1px, transparent 0),
+                linear-gradient(180deg, var(--parchment-light) 0%, var(--parchment-mid) 75%, var(--parchment-edge) 100%);
+            background-size: 12px 12px, 100% 100%;
+            border: 4px solid #18111a;
+            box-shadow:
+                inset 0 0 0 3px #fffdf7,
+                inset 0 0 0 6px #c99e67,
+                inset 0 0 0 8px #5e3c28,
+                0 24px 60px rgba(4, 5, 15, 0.85);
+            position: relative;
+        }
+
+        /* Cantos ornamentados em pixel art */
+        .rpg-corner {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .rpg-corner-tl { top: 10px; left: 10px; border-top: 3px solid #8a1c3a; border-left: 3px solid #8a1c3a; }
+        .rpg-corner-tr { top: 10px; right: 10px; border-top: 3px solid #8a1c3a; border-right: 3px solid #8a1c3a; }
+        .rpg-corner-bl { bottom: 10px; left: 10px; border-bottom: 3px solid #8a1c3a; border-left: 3px solid #8a1c3a; }
+        .rpg-corner-br { bottom: 10px; right: 10px; border-bottom: 3px solid #8a1c3a; border-right: 3px solid #8a1c3a; }
+
+        /* Moldura Widescreen da Cena Final */
+        .rpg-cinema-frame {
+            background: #101329;
+            border: 4px solid #141118;
+            box-shadow:
+                inset 0 0 0 3px #ffd166,
+                inset 0 0 0 6px #4a356e,
+                0 26px 65px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Botões Estilo 16-Bit Táteis */
+        .btn-16bit-rose {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(180deg, #ff7597 0%, #e03163 100%);
+            color: #ffffff;
+            border: 3px solid #18111a;
+            box-shadow:
+                inset 0 3px 0 rgba(255, 255, 255, 0.55),
+                inset 0 -3px 0 rgba(120, 14, 44, 0.7),
+                0 5px 0 #18111a,
+                0 12px 24px rgba(0, 0, 0, 0.55);
+            transition: transform 0.1s ease, filter 0.15s ease;
+            cursor: pointer;
+        }
+
+        .btn-16bit-rose:hover {
+            filter: brightness(1.08);
+            transform: translateY(-2px);
+        }
+
+        .btn-16bit-rose:active {
+            transform: translateY(3px);
+            box-shadow:
+                inset 0 2px 0 rgba(120, 14, 44, 0.7),
+                0 2px 0 #18111a;
+        }
+
+        .btn-16bit-hud {
+            font-family: 'Silkscreen', monospace;
+            background: #1d2142;
+            color: #fffdf7;
+            border: 2px solid #6b5699;
+            box-shadow: 0 3px 0 #0b0e1d;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .btn-16bit-hud:hover {
+            border-color: var(--gold-bright);
+            color: var(--gold-bright);
+            transform: translateY(-1px);
+        }
+
+        .btn-16bit-gold {
+            font-family: 'Silkscreen', monospace;
+            font-weight: 700;
+            background: linear-gradient(180deg, #ffe17d 0%, #e09f24 100%);
+            color: #18111a;
+            border: 3px solid #18111a;
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.7),
+                inset 0 -2px 0 rgba(135, 84, 10, 0.55),
+                0 4px 0 #18111a;
+            cursor: pointer;
+        }
+
+        /* Lírios Progressivos nos Cantos */
+        .corner-lily {
+            position: fixed;
+            z-index: 25;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.15) translateY(45px) rotate(-14deg);
+            transform-origin: bottom center;
+            transition:
+                opacity 0.75s ease-out,
+                transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 10px 14px rgba(5, 6, 18, 0.75));
+        }
+
+        .corner-lily.bloomed {
+            opacity: 1;
+            transform: scale(1) translateY(0) rotate(0deg);
+        }
+
+        @keyframes lilyBreeze {
+            0%, 100% { transform: rotate(-2.5deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        .lily-breeze-inner {
+            animation: lilyBreeze 4.6s ease-in-out infinite;
+            transform-origin: bottom center;
+        }
+
+        /* Capitular estilo Crônica RPG */
+        .rpg-dropcap::first-letter {
+            float: left;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.7rem;
+            line-height: 1;
+            padding: 11px 11px;
+            margin: 4px 13px 2px 0;
+            background: #241612;
+            color: #ffd166;
+            border: 3px solid #9e6b43;
+            box-shadow: 3px 3px 0 #d6be96;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0e1d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5e3c28;
+            border: 2px solid #18111a;
+        }
+    </style>
+</head>
+<body class="relative selection:bg-rose-300 selection:text-stone-900">
+
+    <!-- Camada Ambiental de Estrelas e Vaga-lumes -->
+    <canvas id="bgParticlesCanvas" class="fixed inset-0 w-full h-full pointer-events-none z-10"></canvas>
+
+    <!-- =========================================================================
+         1. TELA INICIAL: ENVELOPE RETRÔ + HELLO KITTY & CINNAMOROLL (16-BIT)
+         ========================================================================= -->
+    <section id="introCover" class="fixed inset-0 z-50 flex flex-col items-center justify-center px-3 sm:px-6 transition-all duration-700 bg-[#0b0e1d]">
+        
+        <!-- Cabeçalho da Capa -->
+        <div class="relative z-20 text-center mb-3 sm:mb-4 space-y-2.5">
+            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 bg-[#181c3a]/95 border-2 border-[#ffd166]/80 text-[#ffd166] font-rpg-title text-[9px] sm:text-[11px] tracking-wider shadow-[0_4px_0_#070914]">
+                <span>★</span>
+                <span>CORREIO ESTRELADO</span>
+                <span>★</span>
+            </div>
+            <h1 class="font-rpg-ui text-xl sm:text-3xl md:text-4xl font-bold text-[#fffdf7] drop-shadow-[0_4px_0_#101329]">
+                Uma Carta Especial Para Você
+            </h1>
+        </div>
+
+        <!-- Palco Widescreen 480x270 (16:9) com Hello Kitty, Cinnamoroll e Envelope -->
+        <div onclick="triggerEnvelopeOpen()" role="button" tabindex="0" aria-label="Abrir carta" class="relative z-20 w-full max-w-[660px] cursor-pointer group">
+            <div class="border-4 border-[#18111a] bg-[#131733] p-1.5 sm:p-2 shadow-[inset_0_0_0_2px_#5e498a,0_24px_55px_rgba(0,0,0,0.88)] group-hover:shadow-[inset_0_0_0_2px_#ffd166,0_24px_60px_rgba(0,0,0,0.92)] transition-all">
+                <canvas id="coverStageCanvas" class="w-full h-auto block"></canvas>
+            </div>
+            <p class="text-center font-rpg-ui text-xs sm:text-sm text-pink-200/90 mt-2.5 group-hover:text-[#ffd166] transition-colors">
+                ✨ Toque no envelope ou nos personagens para abrir ✨
+            </p>
+        </div>
+
+        <!-- Botão Principal -->
+        <button id="btnOpenLetter" onclick="triggerEnvelopeOpen()" class="relative z-20 btn-16bit-rose mt-4 px-7 sm:px-9 py-3.5 sm:py-4 text-xs sm:text-sm tracking-wider flex items-center gap-3">
+            <span>♥</span>
+            <span>ABRIR CARTA</span>
+            <span>♥</span>
+        </button>
+    </section>
+
+    <!-- =========================================================================
+         2. SEIS LÍRIOS DE ALTA DEFINIÇÃO NOS CANTOS (DESABROCHAM COM O SCROLL)
+         ========================================================================= -->
+    <div id="lilySlot-1" class="corner-lily top-14 left-0 sm:top-16 sm:left-3 md:left-6">
+        <div class="lily-breeze-inner" data-lily-type="white"></div>
+    </div>
+    <div id="lilySlot-2" class="corner-lily top-14 right-0 sm:top-16 sm:right-3 md:right-6">
+        <div class="lily-breeze-inner" style="animation-delay: 0.7s;" data-lily-type="pink"></div>
+    </div>
+    <div id="lilySlot-3" class="corner-lily top-1/2 -translate-y-1/2 -left-1 sm:left-2 md:left-5">
+        <div class="lily-breeze-inner" style="animation-delay: 1.4s;" data-lily-type="pink"></div>
+    </div>
+    <div id="lilySlot-4" class="corner-lily top-1/2 -translate-y-1/2 -right-1 sm:right-2 md:right-5">
+        <div class="lily-breeze-inner" style="animation-delay: 0.4s;" data-lily-type="white"></div>
+    </div>
+    <div id="lilySlot-5" class="corner-lily bottom-1 left-0 sm:bottom-4 sm:left-3 md:left-6">
+        <div class="lily-breeze-inner" style="animation-delay: 1.1s;" data-lily-type="white"></div>
+    </div>
+    <div id="lilySlot-6" class="corner-lily bottom-1 right-0 sm:bottom-4 sm:right-3 md:right-6">
+        <div class="lily-breeze-inner" style="animation-delay: 1.8s;" data-lily-type="pink"></div>
+    </div>
+
+    <!-- =========================================================================
+         3. HUD SUPERIOR ESTILO RPG (PROGRESSO DE LÍRIOS + EDITAR / REVER CAPA)
+         ========================================================================= -->
+    <header id="rpgTopHud" class="fixed top-0 left-0 right-0 z-40 hidden bg-[#11152e]/95 backdrop-blur-md border-b-4 border-[#18111a] shadow-[0_8px_25px_rgba(0,0,0,0.65)]">
+        <div class="max-w-3xl mx-auto px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2 sm:gap-4">
+            
+            <!-- Medidor de Carinho & Lírios -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                <span class="text-[#ff5c8a] text-base sm:text-lg leading-none drop-shadow-[0_2px_0_#18111a]">♥</span>
+                <div class="w-full max-w-[160px] sm:max-w-[200px] h-4 bg-[#080a17] border-2 border-[#785338] p-0.5 shadow-inner">
+                    <div id="hudProgressFill" class="h-full bg-gradient-to-r from-[#ff5c8a] via-[#ff9e5e] to-[#ffd166] w-0 transition-all duration-150"></div>
+                </div>
+                <span id="hudProgressText" class="font-rpg-ui text-[10px] sm:text-xs text-[#ffd166] truncate">
+                    0/6 lírios
+                </span>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="reopenCoverStage()" title="Rever abertura" class="btn-16bit-hud text-[11px] sm:text-xs px-2.5 py-1.5 flex items-center gap-1">
+                    <span>✉</span>
+                    <span class="hidden sm:inline">Capa</span>
+                </button>
+                <button onclick="openEditorModal()" class="btn-16bit-hud text-[11px] sm:text-xs px-3 py-1.5 flex items-center gap-1.5">
+                    <span>✎</span>
+                    <span>Editar Carta</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================================================
+         4. CORPO DA CARTA (PERGAMINHO 680PX) + CENA FINAL WIDESCREEN
+         ========================================================================= -->
+    <main id="letterContentArea" class="hidden relative z-20 pt-24 pb-24 px-4 sm:px-8 max-w-[680px] mx-auto">
+        
+        <!-- Dica de Leitura -->
+        <div class="text-center mb-7">
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-[#181c3a]/95 border-2 border-[#ffd166]/60 font-rpg-ui text-[11px] sm:text-xs text-[#ffd166] shadow-md">
+                <span>↓</span>
+                <span>Deslize devagar para ver os lírios desabrocharem</span>
+                <span>↓</span>
+            </span>
+        </div>
+
+        <!-- PERGAMINHO DA CARTA -->
+        <article class="rpg-dialogue-box p-7 sm:p-11 md:p-12 mb-16">
+            <div class="rpg-corner rpg-corner-tl"></div>
+            <div class="rpg-corner rpg-corner-tr"></div>
+            <div class="rpg-corner rpg-corner-bl"></div>
+            <div class="rpg-corner rpg-corner-br"></div>
+
+            <!-- Cabeçalho da Carta -->
+            <div class="flex items-start justify-between gap-4 border-b-2 border-[#d1b894] pb-5 mb-7">
+                <div>
+                    <span class="font-rpg-ui text-[11px] uppercase tracking-widest text-[#7a5036]">Destinatário:</span>
+                    <h2 id="letterRecipientText" class="font-rpg-ui text-lg sm:text-2xl font-bold text-[#8a1c3a] mt-1">
+                        Meu Grande Amor,
+                    </h2>
+                </div>
+
+                <!-- Selo Postal 16-Bit -->
+                <div class="shrink-0 w-14 h-16 bg-[#fffdf7] border-2 border-dashed border-[#8a5e3b] flex flex-col items-center justify-center shadow-xs rotate-2">
+                    <span class="text-[#e03163] text-xl leading-none">♥</span>
+                    <span class="font-rpg-ui text-[8px] text-[#5e3c28] mt-1 text-center leading-tight">PARA<br>SEMPRE</span>
+                </div>
+            </div>
+
+            <!-- Parágrafos com Divisores Ornamentais -->
+            <div id="letterParagraphsContainer" class="font-rpg-body text-[20px] sm:text-[22px] leading-[1.78] text-[#241612] space-y-5">
+                <!-- Renderizado via JavaScript -->
+            </div>
+
+            <!-- Assinatura -->
+            <div class="mt-10 pt-6 border-t-2 border-[#d1b894] flex flex-col items-end text-right">
+                <span class="font-rpg-body text-lg sm:text-xl text-[#694735]">Com todo o meu carinho,</span>
+                <span id="letterSenderText" class="font-rpg-ui text-sm sm:text-base font-bold text-[#8a1c3a] mt-1.5">
+                    Para sempre seu ♥
+                </span>
+            </div>
+        </article>
+
+        <!-- TRANSIÇÃO PARA A CENA FINAL -->
+        <div class="text-center my-12 space-y-2">
+            <div class="inline-block px-3 py-1 bg-[#181c3a] border border-[#ffd166]/60 font-rpg-title text-[10px] sm:text-xs text-[#ffd166] tracking-widest">
+                ★ NOSSO FINAL FELIZ ★
+            </div>
+            <p class="font-rpg-body text-lg sm:text-xl text-indigo-100/90">
+                Onde todos os nossos sonhos ganham um lar sob a lua cheia...
+            </p>
+        </div>
+
+        <!-- DIORAMA FINAL WIDESCREEN 480x270 (CASAL, PIPLUP, LUCARIO & CASA DOS SONHOS) -->
+        <section id="finaleSceneCard" class="rpg-cinema-frame p-2.5 sm:p-4 transition-all duration-1000 transform translate-y-6 opacity-90">
+            <div class="border-4 border-[#0b0e1d] bg-[#0b0e1d] overflow-hidden relative">
+                <canvas id="finaleStageCanvas" class="w-full h-auto block cursor-pointer" title="Clique ou toque na cena para soltar corações e estrelas!"></canvas>
+            </div>
+
+            <div class="mt-4 pt-3 border-t-2 border-[#362959] text-center px-2 space-y-1.5">
+                <h3 id="letterFinaleCaption" class="font-rpg-ui text-sm sm:text-lg font-bold text-[#ffd166]">
+                    Nossa Casa dos Sonhos, juntos para sempre ♥
+                </h3>
+                <p class="font-rpg-ui text-[11px] sm:text-xs text-pink-200/80">
+                    (Clique ou toque em qualquer lugar da cena para soltar corações e notas musicais!)
+                </p>
+            </div>
+        </section>
+
+        <!-- Rodapé de Navegação -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-12">
+            <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="btn-16bit-hud text-xs sm:text-sm px-5 py-3">
+                ↑ Ler Novamente
+            </button>
+            <button onclick="reopenCoverStage()" class="btn-16bit-hud text-xs sm:text-sm px-5 py-3">
+                ✉ Rever Abertura da Carta
+            </button>
+        </div>
+    </main>
+
+    <!-- =========================================================================
+         5. MODAL DE PERSONALIZAÇÃO DA CARTA
+         ========================================================================= -->
+    <div id="customizerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+        <div class="rpg-dialogue-box w-full max-w-lg p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b-2 border-[#d1b894] pb-3 mb-5">
+                <h3 class="font-rpg-ui text-base sm:text-lg font-bold text-[#8a1c3a]">✎ Personalizar Carta</h3>
+                <button onclick="closeEditorModal()" class="font-rpg-title text-xs text-[#241612] hover:text-rose-600 p-1">✕</button>
+            </div>
+
+            <div class="space-y-4 font-rpg-ui text-xs sm:text-sm">
+                <div>
+                    <label class="block text-[#5e3c28] mb-1">Título / Destinatário:</label>
+                    <input id="fieldRecipient" type="text" class="w-full p-2.5 bg-[#fffdf7] border-2 border-[#5e3c28] text-[#241612] focus:outline-none focus:border-[#e03163]">
+                </div>
+
+                <div>
+                    <label class="block text-[#5e3c28] mb-1">Texto da Carta (deixe uma linha em branco entre parágrafos):</label>
+                    <textarea id="fieldBody" rows="6" class="w-full p-2.5 bg-[#fffdf7] border-2 border-[#5e3c28] text-[#241612] font-rpg-body text-lg leading-snug focus:outline-none focus:border-[#e03163]"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-[#5e3c28] mb-1">Assinatura:</label>
+                    <input id="fieldSender" type="text" class="w-full p-2.5 bg-[#fffdf7] border-2 border-[#5e3c28] text-[#241612] focus:outline-none focus:border-[#e03163]">
+                </div>
+
+                <div>
+                    <label class="block text-[#5e3c28] mb-1">Mensagem Final (abaixo da casa):</label>
+                    <input id="fieldCaption" type="text" class="w-full p-2.5 bg-[#fffdf7] border-2 border-[#5e3c28] text-[#241612] focus:outline-none focus:border-[#e03163]">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-end gap-3 mt-6 pt-4 border-t-2 border-[#d1b894]">
+                <button onclick="restoreDefaultLetter()" class="btn-16bit-hud text-xs px-4 py-2.5">
+                    Restaurar Padrão
+                </button>
+                <button onclick="saveCustomLetter()" class="btn-16bit-gold text-xs px-5 py-2.5">
+                    Salvar Carta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de Confirmação -->
+    <div id="feedbackToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden rpg-dialogue-box px-5 py-2.5 font-rpg-ui text-xs sm:text-sm text-[#241612]">
+        Carta salva com sucesso! ♥
+    </div>
+
+    <script>
+        /* =========================================================================
+           1. GERENCIAMENTO DE ESTADO E CONTEÚDO DA CARTA
+           ========================================================================= */
+        const LETTER_STORAGE_KEY = 'pixel_love_letter_16bit_aylla_v2';
+        const DEFAULT_DATA = {
+            recipient: "Para você, Aylla ❤️",
+            body: `Meu bem,
+
+Tudo começou no dia 9 de novembro. Talvez naquele dia nenhum de nós imaginasse o quanto uma simples conversa poderia se tornar especial.
+
+Em tão pouco tempo, você passou a fazer parte dos meus dias, das minhas conversas e dos meus pensamentos. Gosto de conversar com você, de conhecer cada detalhe seu, das nossas brincadeiras e até das nossas pequenas implicâncias.
+
+Mas também quero aproveitar este momento para te pedir desculpas.
+
+Desculpa pelas vezes em que não consegui te dar a atenção que você gostaria, pelas ocasiões em que fiz você se sentir deixada de lado ou pensar que eu não queria conversar com você. Nunca foi minha intenção fazer você se sentir assim.
+
+Às vezes, posso não perceber como determinadas atitudes minhas chegam até você. Sei que palavras são importantes, mas também sei que demonstrar carinho através das atitudes é ainda mais importante.
+
+Não quero que você precise ficar se perguntando se gosto de conversar com você, se quero sua companhia ou se você é importante para mim. Quero que consiga perceber isso também nas pequenas coisas.
+
+Quero que saiba que gosto da sua presença, do seu jeitinho, das nossas conversas e da oportunidade de conhecer cada vez mais sobre você.
+
+Não estou escrevendo esta carta para apagar qualquer desentendimento, mas para demonstrar que me importo. Não sou perfeito e sei que ainda tenho muito a aprender sobre como compreender você e demonstrar o que sinto.
+
+Espero que a gente continue construindo nossa história, sem pressa, com carinho, respeito, paciência e sinceridade.
+
+E se algum dia você esquecer o quanto é especial, espero que possa voltar aqui e lembrar que existe alguém que ficou feliz por ter conhecido você naquele dia 9 de novembro.
+
+Com carinho,`,
+            sender: "Com todo o carinho que existe em mim, seu Davi. ♥",
+            caption: "Que a vida nos permita construir muitos sonhos e lindas lembranças juntos. ♥"
+        };
+
+        let letterState = loadLetterState();
+
+        function loadLetterState() {
+            try {
+                const saved = localStorage.getItem(LETTER_STORAGE_KEY);
+                return saved ? { ...DEFAULT_DATA, ...JSON.parse(saved) } : { ...DEFAULT_DATA };
+            } catch (err) {
+                return { ...DEFAULT_DATA };
+            }
+        }
+
+        function renderLetterDOM() {
+            document.getElementById('letterRecipientText').textContent = letterState.recipient;
+            document.getElementById('letterSenderText').textContent = letterState.sender;
+            document.getElementById('letterFinaleCaption').textContent = letterState.caption;
+
+            const container = document.getElementById('letterParagraphsContainer');
+            container.innerHTML = '';
+
+            const paragraphs = letterState.body.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+            paragraphs.forEach((text, index) => {
+                const p = document.createElement('p');
+                p.textContent = text.trim();
+                if (index === 0) p.classList.add('rpg-dropcap');
+                container.appendChild(p);
+
+                // Divisor ornamental em pixel art entre parágrafos
+                if (index < paragraphs.length - 1) {
+                    const divider = document.createElement('div');
+                    divider.className = 'flex items-center justify-center gap-2 py-1 opacity-75';
+                    divider.innerHTML = `
+                        <span class="h-[2px] w-10 bg-[#cbb28d]"></span>
+                        <span class="text-[#c94a6a] text-xs font-rpg-ui">❀ ♥ ❀</span>
+                        <span class="h-[2px] w-10 bg-[#cbb28d]"></span>
+                    `;
+                    container.appendChild(divider);
+                }
+            });
+        }
+
+        /* =========================================================================
+           2. MOTOR DE SPRITES PIXEL ART (INTEIROS EXATOS SEM BORRÃO)
+           ========================================================================= */
+        function blitSprite(ctx, rows, palette, x, y, scale = 1, flipX = false) {
+            const h = rows.length;
+            const w = rows[0].length;
+            const rx = Math.round(x);
+            const ry = Math.round(y);
+            for (let r = 0; r < h; r++) {
+                const line = rows[r];
+                for (let c = 0; c < w; c++) {
+                    const ch = line[c];
+                    if (ch === '.' || !palette[ch]) continue;
+                    ctx.fillStyle = palette[ch];
+                    const col = flipX ? (w - 1 - c) : c;
+                    ctx.fillRect(rx + col * scale, ry + r * scale, scale, scale);
+                }
+            }
+        }
+
+        /* =========================================================================
+           3. PALCO INICIAL 480x270: ENVELOPE RETRÔ, HELLO KITTY & CINNAMOROLL
+           ========================================================================= */
+        const coverCanvas = document.getElementById('coverStageCanvas');
+        const cCtx = coverCanvas.getContext('2d');
+        const CW = 480;
+        const CH = 270;
+        coverCanvas.width = CW;
+        coverCanvas.height = CH;
+
+        // Paleta 16-bit de alta definição com contorno #141118 e 3 tons de luz/sombra
+        const SANRIO_16BIT_PALETTE = {
+            K: '#141118', // Contorno preto nítido
+            W: '#ffffff', // Branco puro (luz)
+            S: '#e4ecf7', // Branco sombreado (meio-tom)
+            C: '#c2d3eb', // Azul-cinza suave (sombra profunda)
+            R: '#ff3b65', // Laço vermelho brilhante
+            M: '#d91e48', // Laço vermelho médio
+            D: '#8f0e2c', // Laço vermelho sombra
+            Y: '#ffd166', // Amarelo dourado (nariz, botões, blusa)
+            O: '#e09f24', // Sombra amarelo
+            B: '#3b82f6', // Macacão azul claro
+            U: '#1d4ed8', // Macacão azul médio
+            N: '#1e3a8a', // Macacão azul escuro
+            E: '#38bdf8', // Olhos azul-céu Cinnamoroll
+            P: '#ff9ebb'  // Bochechas rosadas
+        };
+
+        // Hello Kitty — pixels copiados da imagem de referência
+        const HELLO_KITTY_HD = [
+            "...KKK.....KK.KKKK...",
+            "...KWWKKKKKRRKWWWK...",
+            "...KWWWWWKRRRKKWWK...",
+            "...KWWWWWKRRKRRKKK...",
+            "..KKWWWWWWKRKRRKRKK..",
+            "..KWWWWWWWWKWKKRRKK..",
+            "..KWWWWWWWWWWWWKKWK..",
+            "KKKKWWWWWWWWWWWWWKKKK",
+            "..KWWWKWWWWWWWKWWWK..",
+            "KKKKWWKWWWWWWWKWWKKKK",
+            "...KWWWWWWYWWWWWWK...",
+            "..KKKWWWWWWWWWWWKKK..",
+            "....KKKKKKKKKKKKK....",
+            "....KYKUKYYYKUKYK....",
+            "...KYYKUUKKKUUKYYK...",
+            "..KYYKUWUUUUUWUKYYK..",
+            "..KKKKUUUUUUUUUKKKK..",
+            "..KWWKUUUUUUUUUKWWK..",
+            "..KWWKUUUUUUUUUKWWK..",
+            "...KKKUUUUKUUUUKKK...",
+            ".....KKKKKKKKKKK.....",
+            ".....KWWWWKWWWWK.....",
+            ".....KWWWWKWWWWK.....",
+            ".....KKKKKKKKKKK....."
+        ];
+
+        // Cinnamoroll — pixels copiados da imagem de referência (girada para ficar em pé)
+        const CINNAMOROLL_HD = [
+            "...........................KKKKKKKK..............................",
+            "........................KKKKKKKKKKKKKK...........................",
+            "...................KKKKKKWWWWWWWWWWWKKKK.........................",
+            ".................KKKWWKWWWWWWWWWWWWWWWWKKKKKK....................",
+            "..............KKKWWWWWWWWWWWWWWWWWWWWWWWKKKKKKK..................",
+            "............KKKWWWWWWWWWWWWWWWWWWWWWWWWWWKWWWWKKK................",
+            "..........KKKKWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWKKK..............",
+            ".....KKKKKKKWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWKKKK...........",
+            "....KKKKWWWWWWWWWWKWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWKKKKK........",
+            "..KKKWWWWWWWWWWWWKKWWWEEWWWWWWWWWWWWWEEWWWWKWWWWWWWWWWWWKKKKKK...",
+            ".KKWWWWWWWWWWWWWWKWWWWEEWWWWWWWWWWWWWEEWWWWWKWWWWWWWWWWWWWWWWKKK.",
+            ".KWWWWWWWWWWWWWWWKWWWWEEWWWWKWWWKWWWWEEWWWWWKWWWWWWWWWWWWWWWWWWKK",
+            "KKWWWWWWWWWWWWWWKKWWWWWWWWWWKKKKKWWWWWWWWWWWKKWWWWWWWWWWWWWWWWWWK",
+            "KKWWWWWWWWWWWWWWKKWPPPWWWWWWWKPKWWWWWWWPPPWWKKKWWWWWWWWWWWWWWWWWK",
+            "KKWWWWWWWWWWWWWKKKPPPPPWWWWWWKPKWWWWWWPPPPPWK.KWWWWWWWWWWWWWWWWWK",
+            ".KWWWWWWWWWWWWKK.KKPPPWWWWWWWKKKWWWWWWWPPPWKK.KKWWWWWWWWWWWWWWWWK",
+            ".KKWWWWWWWWWKK....KKWWWWWWWWWWKWWWWWWWKKKKKK...KKKWWWWWWWWWWWWWKK",
+            "..KWWWWWWWWKK......KKWWWWWWWWWWWWWWWWKKWWKK......KKWWWWWWWWWWWKK.",
+            "..KKKWWWKKKK.......KKKKKKKKKKKKKKKKKKKWWWK........KKKKWWWWWWKKK..",
+            "....KKKKKK.........KWWWWWWWWWWWWWWWWWWWWKK..........KKKKKKKKK....",
+            "...................KKWKKWWWWWWWWWWWWWWWWK........................",
+            "....................KKKWWWWWWWWWWWWWWWWKK........................",
+            ".....................KWWWWWWWWWWWWWWWWKKKKKKKK...................",
+            ".....................KWWWWWWWWWWWWWWWWWKKWWWKKK..................",
+            "....................KKKWWWWWWWWWWWWWWWWKWWWWWWK..................",
+            "...................KKWKKWWWWWWWWWWWWWWWKWWWWWWK..................",
+            "...................KWWWWWWWWWWWWWWWWWWWKWWWKWWK..................",
+            "..................KKWWWWWWWWWWWWWWWWWWKKKKKKWWK..................",
+            "..................KKWWWWWWWWWWWWWWWWWWKWKKKWWWK..................",
+            "...................KKKKKKWWWWWWWWWWWWKKWWWWWWKK..................",
+            "........................KKKKKKKKKKKWWKKKKWWWKK...................",
+            ".............................KKKKKKWWK..KKKKK....................",
+            ".................................KKWKK...........................",
+            "..................................KKK............................"
+        ];
+
+        const coverStars = Array.from({ length: 65 }, (_, i) => ({
+            x: (i * 73 + 19) % CW,
+            y: (i * 37 + 11) % 165,
+            size: i % 5 === 0 ? 2 : 1,
+            speed: 0.03 + (i % 4) * 0.015,
+            phase: i * 0.8
+        }));
+
+        const pastelClouds = [
+            { x: 35, y: 34, w: 68, speed: 0.12 },
+            { x: 295, y: 26, w: 84, speed: 0.09 },
+            { x: 185, y: 62, w: 54, speed: 0.15 },
+            { x: 390, y: 74, w: 58, speed: 0.11 }
+        ];
+
+        let coverTick = 0;
+        let isEnvelopeOpening = false;
+        let openProgress = 0; // 0 -> 1
+        const coverBurstParticles = [];
+
+        function spawnCoverBurst(cx, cy) {
+            const colors = ['#ff5c8a', '#ffd166', '#ffffff', '#ff9ebb', '#7dd3fc', '#c084fc'];
+            for (let i = 0; i < 65; i++) {
+                const angle = (Math.PI * 2 * i) / 65 + (Math.random() * 0.25);
+                const speed = 1.6 + Math.random() * 4.2;
+                coverBurstParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 2.2,
+                    color: colors[i % colors.length],
+                    kind: i % 3 === 0 ? 'heart' : (i % 3 === 1 ? 'petal' : 'star'),
+                    life: 1
+                });
+            }
+        }
+
+        function drawPastelCloud(x, y, w) {
+            const ix = Math.floor(x);
+            const iy = Math.floor(y);
+            // Sombra lilás base
+            cCtx.fillStyle = '#383066';
+            cCtx.fillRect(ix + 4, iy + 8, w - 8, 6);
+            // Corpo pastel lilás-rosado suave
+            cCtx.fillStyle = '#5c4d94';
+            cCtx.fillRect(ix + 2, iy + 4, w - 4, 7);
+            cCtx.fillRect(ix + 10, iy, w - 20, 6);
+            // Topo iluminado
+            cCtx.fillStyle = '#7e6bc2';
+            cCtx.fillRect(ix + 12, iy + 1, w - 24, 2);
+        }
+
+        function drawAirMailEnvelope(x, y, flapProgress) {
+            const w = 186;
+            const h = 114;
+
+            // Sombra projetada suave no chão noturno
+            cCtx.fillStyle = 'rgba(5, 6, 18, 0.7)';
+            cCtx.fillRect(x + 10, y + h + 6, w - 20, 7);
+
+            // Contorno escuro 16-bit
+            cCtx.fillStyle = '#141118';
+            cCtx.fillRect(x - 3, y, w + 6, h);
+            cCtx.fillRect(x, y - 3, w, h + 6);
+
+            // Papel da Carta Emergindo de Dentro
+            const paperRise = Math.floor(flapProgress * 38);
+            cCtx.fillStyle = '#fffdf7';
+            cCtx.fillRect(x + 10, y + 8 - paperRise, w - 20, h - 14);
+            cCtx.fillStyle = '#e6d5b8';
+            cCtx.fillRect(x + 10, y + 8 - paperRise, w - 20, 2);
+
+            if (flapProgress > 0.12) {
+                // Linhas caligráficas e coração no papel emergindo
+                cCtx.fillStyle = '#e03163';
+                cCtx.fillRect(x + w / 2 - 4, y + 14 - paperRise, 3, 2);
+                cCtx.fillRect(x + w / 2 + 1, y + 14 - paperRise, 3, 2);
+                cCtx.fillRect(x + w / 2 - 5, y + 16 - paperRise, 10, 3);
+                cCtx.fillRect(x + w / 2 - 3, y + 19 - paperRise, 6, 2);
+                cCtx.fillRect(x + w / 2 - 1, y + 21 - paperRise, 2, 2);
+
+                cCtx.fillStyle = '#b89468';
+                cCtx.fillRect(x + 26, y + 27 - paperRise, w - 52, 2);
+                cCtx.fillRect(x + 26, y + 34 - paperRise, w - 72, 2);
+                cCtx.fillRect(x + 26, y + 41 - paperRise, w - 60, 2);
+            }
+
+            // Corpo Principal do Envelope (Creme Marfim)
+            cCtx.fillStyle = '#f7eedc';
+            cCtx.fillRect(x, y, w, h);
+            // Sombra inferior
+            cCtx.fillStyle = '#e3cfa8';
+            cCtx.fillRect(x, y + h - 12, w, 12);
+
+            // Bordas Listradas Retrô Estilo Correio Aéreo (Rosa & Azul Céu)
+            for (let bx = 4; bx < w - 12; bx += 16) {
+                cCtx.fillStyle = (bx / 16) % 2 === 0 ? '#ff5c8a' : '#38bdf8';
+                cCtx.fillRect(x + bx, y + 3, 10, 3);
+                cCtx.fillRect(x + bx, y + h - 6, 10, 3);
+            }
+            for (let by = 8; by < h - 12; by += 14) {
+                cCtx.fillStyle = (by / 14) % 2 === 0 ? '#38bdf8' : '#ff5c8a';
+                cCtx.fillRect(x + 3, y + by, 3, 8);
+                cCtx.fillRect(x + w - 6, y + by, 3, 8);
+            }
+
+            // Dobras diagonais inferiores
+            cCtx.fillStyle = '#cbb082';
+            for (let i = 0; i < 56; i++) {
+                cCtx.fillRect(x + 6 + i, y + h - 7 - Math.floor(i * 0.65), 2, 2);
+                cCtx.fillRect(x + w - 8 - i, y + h - 7 - Math.floor(i * 0.65), 2, 2);
+            }
+
+            // Aba Superior Articulada
+            const flapHeight = 56;
+            if (flapProgress < 0.5) {
+                const curH = Math.max(3, Math.floor(flapHeight * (1 - flapProgress * 2)));
+                for (let r = 0; r < curH; r++) {
+                    const span = Math.floor((w - 8) * (1 - r / curH));
+                    const sx = x + Math.floor((w - span) / 2);
+                    cCtx.fillStyle = r >= curH - 2 ? '#a88454' : '#fffaf0';
+                    cCtx.fillRect(sx, y + 4 + r, span, 1);
+                }
+            } else {
+                const curH = Math.floor(flapHeight * ((flapProgress - 0.5) * 2));
+                for (let r = 0; r < curH; r++) {
+                    const span = Math.floor((w - 8) * (1 - r / Math.max(1, curH)));
+                    const sx = x + Math.floor((w - span) / 2);
+                    cCtx.fillStyle = '#e3cfa8';
+                    cCtx.fillRect(sx, y - r, span, 1);
+                }
+            }
+
+            // Lacre de Cera Carmesim com Borda Dourada e Coração Brilhante
+            if (flapProgress < 0.75) {
+                const lx = x + Math.floor(w / 2) - 14;
+                const ly = y + 44 - Math.floor(flapProgress * 42);
+
+                // Contorno escuro
+                cCtx.fillStyle = '#141118';
+                cCtx.fillRect(lx - 2, ly + 2, 32, 24);
+                cCtx.fillRect(lx + 2, ly - 2, 24, 32);
+
+                // Anel dourado
+                cCtx.fillStyle = '#ffd166';
+                cCtx.fillRect(lx, ly + 2, 28, 24);
+                cCtx.fillRect(lx + 2, ly, 24, 28);
+
+                // Cera carmesim
+                cCtx.fillStyle = '#d91e48';
+                cCtx.fillRect(lx + 3, ly + 3, 22, 22);
+                cCtx.fillStyle = '#ff4d6d';
+                cCtx.fillRect(lx + 4, ly + 4, 20, 4);
+
+                // Coração branco central
+                cCtx.fillStyle = '#ffffff';
+                cCtx.fillRect(lx + 8, ly + 8, 4, 3);
+                cCtx.fillRect(lx + 16, ly + 8, 4, 3);
+                cCtx.fillRect(lx + 6, ly + 11, 16, 4);
+                cCtx.fillRect(lx + 9, ly + 15, 10, 3);
+                cCtx.fillRect(lx + 12, ly + 18, 4, 3);
+            }
+        }
+
+        function animateCoverStage() {
+            coverTick++;
+
+            // 1. Céu Noturno em Degradê Pixelado
+            const skyLayers = [
+                { y: 0, h: 55, c: '#0b0e1d' },
+                { y: 55, h: 55, c: '#121633' },
+                { y: 110, h: 55, c: '#1b2047' },
+                { y: 165, h: 55, c: '#252659' },
+                { y: 220, h: 50, c: '#302b6b' }
+            ];
+            skyLayers.forEach(l => {
+                cCtx.fillStyle = l.c;
+                cCtx.fillRect(0, l.y, CW, l.h);
+            });
+
+            // 2. Estrelas Cintilantes
+            coverStars.forEach(st => {
+                const twinkle = Math.sin(coverTick * st.speed + st.phase);
+                if (twinkle > -0.2) {
+                    cCtx.fillStyle = twinkle > 0.7 ? '#ffffff' : '#ffd166';
+                    cCtx.fillRect(st.x, st.y, st.size, st.size);
+                    if (st.size === 2 && twinkle > 0.85) {
+                        cCtx.fillRect(st.x - 2, st.y, 6, 1);
+                        cCtx.fillRect(st.x, st.y - 2, 1, 6);
+                    }
+                }
+            });
+
+            // 3. Nuvens Pastel Flutuantes
+            pastelClouds.forEach(cl => {
+                cl.x += cl.speed;
+                if (cl.x > CW + 15) cl.x = -cl.w - 15;
+                drawPastelCloud(cl.x, cl.y, cl.w);
+            });
+
+            // 4. Atualização da Animação de Abertura
+            if (isEnvelopeOpening && openProgress < 1) {
+                openProgress = Math.min(1, openProgress + 0.02);
+            }
+
+            // 5. Envelope Central
+            const envX = 147;
+            const envY = 112;
+            drawAirMailEnvelope(envX, envY, openProgress);
+
+            // 6. Hello Kitty (Esquerda) & Cinnamoroll (Direita)
+            let hkX = 36;
+            let hkY = 154 + Math.round(Math.sin(coverTick * 0.08) * 3);
+            let cinnaX = 342;
+            let cinnaY = 178 + Math.round(Math.cos(coverTick * 0.08) * 3);
+
+            if (isEnvelopeOpening) {
+                // Salto parabólico sincronizado pousando sobre as pontas da aba do envelope
+                const jumpArc = Math.sin(openProgress * Math.PI) * 74;
+                hkX = 36 + Math.round(openProgress * 92);
+                hkY = 154 - Math.round(jumpArc);
+
+                cinnaX = 342 - Math.round(openProgress * 92);
+                cinnaY = 178 - Math.round(jumpArc);
+            }
+
+            // Sombras no solo imaginário
+            cCtx.fillStyle = 'rgba(5, 6, 18, 0.45)';
+            cCtx.fillRect(hkX + 8, 248, 68, 5);
+            cCtx.fillRect(cinnaX + 12, 244, 106, 5);
+
+            blitSprite(cCtx, HELLO_KITTY_HD, SANRIO_16BIT_PALETTE, hkX, hkY, 4, false);
+            blitSprite(cCtx, CINNAMOROLL_HD, SANRIO_16BIT_PALETTE, cinnaX, cinnaY, 2, false);
+
+            // 7. Chuva de Corações, Estrelas e Pétalas ao Abrir
+            for (let i = coverBurstParticles.length - 1; i >= 0; i--) {
+                const p = coverBurstParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08;
+                p.life -= 0.017;
+                if (p.life <= 0) {
+                    coverBurstParticles.splice(i, 1);
+                } else {
+                    cCtx.globalAlpha = p.life;
+                    cCtx.fillStyle = p.color;
+                    const px = Math.floor(p.x);
+                    const py = Math.floor(p.y);
+                    if (p.kind === 'heart') {
+                        cCtx.fillRect(px, py, 2, 2);
+                        cCtx.fillRect(px + 3, py, 2, 2);
+                        cCtx.fillRect(px, py + 2, 5, 2);
+                        cCtx.fillRect(px + 1, py + 4, 3, 1);
+                    } else if (p.kind === 'petal') {
+                        cCtx.fillRect(px, py, 4, 2);
+                    } else {
+                        cCtx.fillRect(px, py, 3, 3);
+                    }
+                    cCtx.globalAlpha = 1;
+                }
+            }
+
+            if (!document.getElementById('introCover').classList.contains('hidden')) {
+                requestAnimationFrame(animateCoverStage);
+            }
+        }
+
+        function triggerEnvelopeOpen() {
+            if (isEnvelopeOpening) return;
+            isEnvelopeOpening = true;
+            spawnCoverBurst(CW / 2, 145);
+
+            setTimeout(() => {
+                spawnCoverBurst(CW / 2 - 55, 95);
+                spawnCoverBurst(CW / 2 + 55, 95);
+            }, 360);
+
+            setTimeout(() => {
+                const cover = document.getElementById('introCover');
+                cover.style.opacity = '0';
+                cover.style.transform = 'scale(1.03)';
+                setTimeout(() => {
+                    cover.classList.add('hidden');
+                    document.getElementById('rpgTopHud').classList.remove('hidden');
+                    document.getElementById('letterContentArea').classList.remove('hidden');
+                    syncLiliesWithScroll();
+                }, 650);
+            }, 1050);
+        }
+
+        function reopenCoverStage() {
+            isEnvelopeOpening = false;
+            openProgress = 0;
+            coverBurstParticles.length = 0;
+            const cover = document.getElementById('introCover');
+            cover.classList.remove('hidden');
+            cover.style.opacity = '1';
+            cover.style.transform = 'scale(1)';
+            requestAnimationFrame(animateCoverStage);
+        }
+
+        /* =========================================================================
+           4. LÍRIOS MAJESTOSOS EM PIXEL ART NOS CANTOS (DESABROCHAM NO SCROLL)
+           ========================================================================= */
+        function createHighDefLilySVG(colorVariant) {
+            const p1 = colorVariant === 'white' ? '#ffffff' : '#ffe0ea';
+            const p2 = colorVariant === 'white' ? '#e8eef5' : '#ff9ebb';
+            const p3 = colorVariant === 'white' ? '#cbd5e1' : '#fb6f92';
+            const outline = '#18111a';
+
+            return `
+            <svg viewBox="0 0 26 32" shape-rendering="crispEdges" class="w-16 h-20 sm:w-24 sm:h-28 md:w-28 md:h-34">
+                <!-- Pétala Superior com Contorno -->
+                <rect x="12" y="1" width="2" height="1" fill="${outline}"/>
+                <rect x="11" y="2" width="4" height="2" fill="${p1}"/>
+                <rect x="10" y="4" width="6" height="3" fill="${p1}"/>
+                <rect x="9" y="7" width="8" height="2" fill="${p2}"/>
+                <!-- Pétalas Laterais Superiores -->
+                <rect x="3" y="6" width="5" height="2" fill="${p1}"/>
+                <rect x="2" y="8" width="6" height="2" fill="${p2}"/>
+                <rect x="18" y="6" width="5" height="2" fill="${p1}"/>
+                <rect x="18" y="8" width="6" height="2" fill="${p2}"/>
+                <!-- Corola Central -->
+                <rect x="6" y="9" width="14" height="4" fill="${p1}"/>
+                <rect x="5" y="11" width="16" height="3" fill="${p2}"/>
+                <!-- Pétalas Laterais Inferiores -->
+                <rect x="2" y="13" width="6" height="2" fill="${p2}"/>
+                <rect x="1" y="15" width="4" height="2" fill="${p3}"/>
+                <rect x="18" y="13" width="6" height="2" fill="${p2}"/>
+                <rect x="21" y="15" width="4" height="2" fill="${p3}"/>
+                <!-- Pétala Inferior Central -->
+                <rect x="9" y="14" width="8" height="3" fill="${p2}"/>
+                <rect x="11" y="17" width="4" height="3" fill="${p3}"/>
+                <rect x="12" y="20" width="2" height="1" fill="${outline}"/>
+                <!-- Estames Dourados Luminosos -->
+                <rect x="12" y="10" width="2" height="2" fill="#ffd166"/>
+                <rect x="9" y="8" width="2" height="2" fill="#f59e0b"/>
+                <rect x="15" y="8" width="2" height="2" fill="#f59e0b"/>
+                <rect x="12" y="7" width="2" height="2" fill="#fbbf24"/>
+                <!-- Caule & Folhagem em 2 Tons -->
+                <rect x="12" y="21" width="2" height="11" fill="#1b4332"/>
+                <rect x="5" y="22" width="7" height="1" fill="#52b788"/>
+                <rect x="3" y="23" width="7" height="2" fill="#2d6a4f"/>
+                <rect x="14" y="24" width="7" height="1" fill="#52b788"/>
+                <rect x="16" y="25" width="7" height="2" fill="#2d6a4f"/>
+            </svg>`;
+        }
+
+        function initCornerLilies() {
+            document.querySelectorAll('[data-lily-type]').forEach(el => {
+                el.innerHTML = createHighDefLilySVG(el.getAttribute('data-lily-type'));
+            });
+        }
+
+        const SCROLL_MILESTONES = [0.04, 0.19, 0.35, 0.51, 0.67, 0.83];
+        function syncLiliesWithScroll() {
+            const scrollTop = window.scrollY;
+            const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+            const ratio = Math.min(1, Math.max(0, scrollTop / maxScroll));
+
+            document.getElementById('hudProgressFill').style.width = `${Math.round(ratio * 100)}%`;
+
+            let activeCount = 0;
+            SCROLL_MILESTONES.forEach((step, i) => {
+                const slot = document.getElementById(`lilySlot-${i + 1}`);
+                if (ratio >= step) {
+                    slot.classList.add('bloomed');
+                    activeCount++;
+                } else {
+                    slot.classList.remove('bloomed');
+                }
+            });
+
+            document.getElementById('hudProgressText').textContent = `${activeCount}/6 lírios`;
+
+            if (ratio > 0.76) {
+                const finaleCard = document.getElementById('finaleSceneCard');
+                finaleCard.classList.remove('translate-y-6', 'opacity-90');
+                finaleCard.classList.add('translate-y-0', 'opacity-100');
+            }
+        }
+        window.addEventListener('scroll', syncLiliesWithScroll, { passive: true });
+
+        /* =========================================================================
+           5. DIORAMA FINAL WIDESCREEN (480x270): CASA DOS SONHOS, CASAL, PIPLUP & LUCARIO
+           ========================================================================= */
+        const fCanvas = document.getElementById('finaleStageCanvas');
+        const fCtx = fCanvas.getContext('2d');
+        const FW = 480;
+        const FH = 270;
+        fCanvas.width = FW;
+        fCanvas.height = FH;
+
+        // Paleta GBA / DS Pokémon (16-bit rico em detalhes e sombreamento)
+        const POKEMON_GBA_PALETTE = {
+            K: '#141118', // Contorno escuro 16-bit
+            S: '#ebb191', // Pele iluminada
+            D: '#c78565', // Sombra de pele
+            P: '#f48fb1', // Rubor suave nas bochechas
+            H: '#7c2d12', // Cabelo castanho-avermelhado escuro
+            R: '#b45309', // Cabelo acobreado meio-tom
+            L: '#d97706', // Brilho acobreado no cabelo
+            M: '#1b1924', // Preto profundo (cabelo dele, roupas pretas, Vans)
+            G: '#3b374a', // Cinza chumbo (luz no cabelo preto / roupas)
+            W: '#ffffff', // Branco (faixa Vans, olhos, detalhe camiseta)
+            J: '#2563eb', // Jeans azul médio
+            N: '#1e3a8a', // Jeans azul sombra
+            I: '#60a5fa', // Jeans azul luz
+            C: '#78350f', // Cinto marrom
+            B: '#38bdf8', // Azul Piplup / Lucario
+            U: '#1d4ed8', // Azul escuro Piplup
+            A: '#7dd3fc', // Azul claro máscara Piplup
+            Y: '#f59e0b', // Bico e patas Piplup
+            E: '#fef08a', // Peitoral creme Lucario
+            V: '#ef4444'  // Olhos vermelhos Lucario
+        };
+
+        // Treinadora (24x42 - Cabelo longo volumoso cacheado castanho-avermelhado, regata preta, jeans azul com cinto marrom, Vans preto/branco)
+        const TRAINER_GIRL_HD = [
+            ".......HHHHHHHHHH.......",
+            ".....HHLLLLLLLLLLHH.....",
+            "....HLLRRRRRRRRRRLLH....",
+            "...HLRRHHHHHHHHHHRRLH...",
+            "..HLRHSSSSSSSSSSSSHRLL..",
+            "..HLHSSSSSSSSSSSSSSHLH..",
+            ".HLRHSSKKSSSSSSKKSSHRLH.",
+            ".HLHHSSKKSSSSSSKKSSHHLL.",
+            ".HLHHSPSSSSSSSSSSPPHHLL.",
+            "HHLRHHSSSSSSSSSSSSHHRLHH",
+            "HLRRHHHSSSSSSSSSSHHHRLRH",
+            "HLRHH..KSSSSSSSSK..HHRRH",
+            "HLRH..KKMMMMMMMMKK..HRLH",
+            "HLHH.KSMMMMMMMMMMSK.HHLH",
+            "HH.H.KSMMMWMMMMMMSK.H.HH",
+            "...H.KSMMMMMMMMMMSK.H...",
+            ".....KSSMMMMMMMMSSK.....",
+            ".....KSSCCCCCCCCSSK.....",
+            "......KKJJJJJJJJKK......",
+            "......KJJIIJJIIJJK......",
+            "......KJJIIJJIIJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KMMMK..KMMMK......",
+            ".....KMWWMK..KMWWMK.....",
+            ".....KWWWWK..KWWWWK.....",
+            "......KKKK....KKKK......"
+        ];
+
+        // Treinador (24x44 - Cabelo preto bagunçado texturizado, óculos quadrados, bigode fino + cavanhaque, camiseta preta, jeans largo, Vans)
+        const TRAINER_BOY_HD = [
+            "......KKKKKKKKKKKK......",
+            ".....KMMMMMMMMMMMMK.....",
+            "....KMMGMMMMMMMMGMMK....",
+            "...KMMGGMMMMMMMMGGMMK...",
+            "...KMMMMMMMMMMMMMMMMK...",
+            "....KSSSSSSSSSSSSSSK....",
+            "....KKKKKKKKKKKKKKKK....",
+            "....KWMMKSSSSSSKMMWK....",
+            "....KWMMKSSSSSSKMMWK....",
+            "....KKKKKKKKKKKKKKKK....",
+            "....KSSSSMMMMMMSSSSK....",
+            ".....KSSSSSSSSSSSSK.....",
+            "......KSSSSMMSSSSK......",
+            ".......KKKKKKKKKK.......",
+            ".....KKMMMMMMMMMMKK.....",
+            "....KMMMMMMMMMMMMMMK....",
+            "...KSSMMMMMMMMMMMMSSK...",
+            "..KSSSMMMMWMMMMMMMSSSK..",
+            "..KSSKMMMMMMMMMMMMKSSK..",
+            "..KSSKMMMMMMMMMMMMKSSK..",
+            "...KK.MMMMMMMMMMMM.KK...",
+            "......KJJJJJJJJJJK......",
+            "......KJJIIJJIIJJK......",
+            "......KJJIIJJIIJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KJJNNJJNNJJK......",
+            "......KMMMK..KMMMK......",
+            ".....KMWWMK..KMWWMK.....",
+            ".....KWWWWK..KWWWWK.....",
+            "......KKKK....KKKK......"
+        ];
+
+        // Piplup HD (22x23 - Fiel ao sprite enviado, contorno preto, capa azul, bico e patinhas laranjas)
+        const PIPLUP_HD = [
+            ".......KKKKKKKK.......",
+            ".....KKUUUUUUUUKK.....",
+            "...KKUUUUUUUUUUUUKK...",
+            "..KUUUUUUAKKAUUUUUUK..",
+            ".KUUUUUUAAAAAAUUUUUUK.",
+            ".KUUUUUAAAAAAAAUUUUUK.",
+            "KKWWWKAAAAAAAAAAKWWWKK",
+            "KWKKWKAAAAAAAAAAKWKKWK",
+            "KWKKWWAAYYYYYYAAWWKKWK",
+            "KWWWWWWYYYYYYYYWWWWWWK",
+            ".KKWWWWKYYYYYYKWWWWKK.",
+            "...KKKKKUUUUUUKKKKK...",
+            "..KUUUUUUUUUUUUUUUUK..",
+            ".KAAKUUUUUUUUUUUUKAAK.",
+            "KAAAKWWAAAAAAAAWWKAAAK",
+            "KAAAKWWAAAAAAAAWWKAAAK",
+            ".KKKYYYYAAAAAAYYYYKKK.",
+            "...KYYYYKAAAAKYYYYK...",
+            "....KKKK.KKKK.KKKK...."
+        ];
+
+        // Lucario HD (26x30 - Fiel ao sprite enviado, orelhas pretas/azuis, olhos vermelhos, tronco creme com espinho, patas pretas)
+        const LUCARIO_HD = [
+            ".......KK........KK.......",
+            "......KBBK......KBBK......",
+            "......KBBK.KKKK.KBBK......",
+            ".....KBBBBKMMMMKBBBBK.....",
+            ".....KMMMMMMMMMMMMMMK.....",
+            "....KMMVVMMKMMKMMWWMMK....",
+            "....KMMVVMMKMMKMMWWMMK....",
+            "....KMMMMMMMMMMMMMMMMK....",
+            ".....KKBBBBBBBBBBBBKK.....",
+            ".......KKEEEEEEEEKK.......",
+            "...KK..KBEEEWWEEEBK..KK...",
+            "..KMMK.BBEEEEEEEEBB.KMMK..",
+            ".KMMWMKBBEEEEEEEEBBKMWMMK.",
+            "KMMWMMK.KEEEEEEEEK.KMMWMMK",
+            ".KMMMK..KMMMMMMMMK..KMMMK.",
+            "..KKK..KBBBBBBBBBBK..KKK..",
+            "......KBBBBBBBBBBBBK......",
+            ".....KBBBBK....KBBBBK.....",
+            ".....KBBBBK....KBBBBK.....",
+            ".....KMMMK......KMMMK.....",
+            "....KMMMK........KMMMK....",
+            "...KMMMK..........KMMMK...",
+            "...KKKKK..........KKKKK..."
+        ];
+
+        let fFrame = 0;
+        const fChimneySmoke = [];
+        const fFloatingHearts = [];
+        const fStars = Array.from({ length: 85 }, (_, i) => ({
+            x: (i * 67 + 23) % FW,
+            y: (i * 31 + 13) % 125,
+            big: i % 6 === 0,
+            phase: i * 0.7
+        }));
+
+        const fFireflies = Array.from({ length: 22 }, (_, i) => ({
+            x: 24 + (i * 21) % (FW - 48),
+            y: 150 + (i * 17) % 95,
+            phase: i * 0.9
+        }));
+
+        // Interatividade ao clicar/tocar em qualquer ponto da cena final
+        fCanvas.addEventListener('click', (e) => {
+            const rect = fCanvas.getBoundingClientRect();
+            const cx = Math.floor(((e.clientX - rect.left) / rect.width) * FW);
+            const cy = Math.floor(((e.clientY - rect.top) / rect.height) * FH);
+
+            for (let i = 0; i < 12; i++) {
+                fFloatingHearts.push({
+                    x: cx + (Math.random() * 34 - 17),
+                    y: cy + (Math.random() * 14 - 7),
+                    vx: (Math.random() - 0.5) * 0.55,
+                    vy: -0.38 - Math.random() * 0.42,
+                    type: i % 3 === 0 ? 'note' : (i % 3 === 1 ? 'star' : 'heart'),
+                    life: 1
+                });
+            }
+        });
+
+        function fBox(x, y, w, h, color) {
+            fCtx.fillStyle = color;
+            fCtx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
+        }
+
+        function drawTinyIcon(x, y, type, life) {
+            const ix = Math.floor(x);
+            const iy = Math.floor(y);
+            if (type === 'heart') {
+                const col = life > 0.5 ? '#ff4d6d' : '#ff9ebb';
+                fBox(ix + 1, iy, 2, 1, col);
+                fBox(ix + 4, iy, 2, 1, col);
+                fBox(ix, iy + 1, 7, 2, col);
+                fBox(ix + 1, iy + 3, 5, 2, col);
+                fBox(ix + 3, iy + 5, 1, 1, col);
+            } else if (type === 'star') {
+                fBox(ix + 2, iy, 1, 5, '#ffd166');
+                fBox(ix, iy + 2, 5, 1, '#ffd166');
+            } else {
+                // Nota musical pixelada
+                fBox(ix + 2, iy, 3, 1, '#7dd3fc');
+                fBox(ix + 2, iy + 1, 1, 4, '#7dd3fc');
+                fBox(ix, iy + 3, 3, 2, '#7dd3fc');
+            }
+        }
+
+        function drawFullMoonDetailed(cx, cy, r) {
+            // Halo de luz noturna
+            fBox(cx - r - 10, cy - r - 7, (r + 10) * 2, (r + 7) * 2, 'rgba(255, 250, 224, 0.04)');
+            fBox(cx - r - 5, cy - r - 4, (r + 5) * 2, (r + 4) * 2, 'rgba(255, 250, 224, 0.08)');
+
+            for (let dy = -r; dy <= r; dy++) {
+                for (let dx = -r; dx <= r; dx++) {
+                    if (dx * dx + dy * dy <= r * r) {
+                        const c1 = (dx + 9) * (dx + 9) + (dy + 6) * (dy + 6) < 34;
+                        const c2 = (dx - 11) * (dx - 11) + (dy - 8) * (dy - 8) < 44;
+                        const c3 = (dx + 4) * (dx + 4) + (dy - 13) * (dy - 13) < 24;
+                        const c4 = (dx - 7) * (dx - 7) + (dy + 12) * (dy + 12) < 18;
+                        const shade = (dx > 14 && dy > 10);
+                        fBox(cx + dx, cy + dy, 1, 1, (c1 || c2 || c3 || c4 || shade) ? '#cbd5e1' : '#fffbeb');
+                    }
+                }
+            }
+        }
+
+        function drawDreamHouse2Story(hx, hy) {
+            // Chaminé de Tijolinhos
+            fBox(hx + 104, hy - 18, 16, 30, '#7f1d1d');
+            fBox(hx + 106, hy - 18, 5, 30, '#991b1b');
+            fBox(hx + 101, hy - 21, 22, 4, '#450a0a');
+
+            // Telhado Terracota / Vinho Escuro com Telhas Pixeladas
+            for (let row = 0; row < 44; row++) {
+                const span = 34 + Math.floor(row * 2.9);
+                const sx = hx + 80 - Math.floor(span / 2);
+                const roofTone = row % 5 === 0 ? '#3b0d1e' : (row % 2 === 0 ? '#5c162e' : '#731d3b');
+                fBox(sx, hy + row, span, 1, roofTone);
+            }
+            // Beiral duplo de madeira
+            fBox(hx + 8, hy + 43, 144, 4, '#241612');
+            fBox(hx + 10, hy + 42, 140, 2, '#9e6b43');
+
+            // Janela Circular do Sótão Iluminada
+            fBox(hx + 70, hy + 16, 20, 20, '#241612');
+            fBox(hx + 72, hy + 18, 16, 16, '#fde047');
+            fBox(hx + 79, hy + 18, 2, 16, '#241612');
+            fBox(hx + 72, hy + 25, 16, 2, '#241612');
+
+            // Paredes Aconchegantes em Creme / Madeira
+            fBox(hx + 14, hy + 47, 132, 66, '#fef3c7');
+            fBox(hx + 14, hy + 47, 132, 4, '#d97706'); // Sombra sob o beiral
+
+            // Vigas Estruturais Verticais & Horizontais
+            fBox(hx + 14, hy + 47, 4, 66, '#5c3a28');
+            fBox(hx + 142, hy + 47, 4, 66, '#5c3a28');
+            fBox(hx + 58, hy + 47, 3, 66, '#78350f');
+            fBox(hx + 99, hy + 47, 3, 66, '#78350f');
+
+            // Base de Pedras & Varanda Iluminada
+            fBox(hx + 11, hy + 107, 138, 6, '#475569');
+            fBox(hx + 56, hy + 110, 48, 6, '#78350f');
+
+            // Porta Central de Madeira com Vitral Dourado
+            fBox(hx + 68, hy + 72, 24, 38, '#241612');
+            fBox(hx + 70, hy + 74, 20, 34, '#78350f');
+            fBox(hx + 73, hy + 77, 14, 12, '#fde047');
+            fBox(hx + 85, hy + 92, 3, 3, '#fbbf24');
+
+            // Lanternas Externas Penduradas com Halo Quente
+            fBox(hx + 61, hy + 76, 4, 5, '#fef08a');
+            fBox(hx + 60, hy + 75, 6, 7, 'rgba(254, 240, 138, 0.28)');
+            fBox(hx + 95, hy + 76, 4, 5, '#fef08a');
+            fBox(hx + 94, hy + 75, 6, 7, 'rgba(254, 240, 138, 0.28)');
+
+            // Janela Grande Esquerda + Floreira de Lírios
+            fBox(hx + 24, hy + 62, 24, 22, '#241612');
+            fBox(hx + 26, hy + 64, 20, 18, '#fde047');
+            fBox(hx + 35, hy + 64, 2, 18, '#241612');
+            fBox(hx + 26, hy + 72, 20, 2, '#241612');
+            fBox(hx + 22, hy + 84, 28, 4, '#7f1d1d');
+            fBox(hx + 25, hy + 82, 3, 2, '#ffffff');
+            fBox(hx + 34, hy + 82, 3, 2, '#ff8fab');
+            fBox(hx + 43, hy + 82, 3, 2, '#ffffff');
+
+            // Janela Grande Direita + Floreira de Lírios
+            fBox(hx + 112, hy + 62, 24, 22, '#241612');
+            fBox(hx + 114, hy + 64, 20, 18, '#fde047');
+            fBox(hx + 123, hy + 64, 2, 18, '#241612');
+            fBox(hx + 114, hy + 72, 20, 2, '#241612');
+            fBox(hx + 110, hy + 84, 28, 4, '#7f1d1d');
+            fBox(hx + 113, hy + 82, 3, 2, '#ff8fab');
+            fBox(hx + 122, hy + 82, 3, 2, '#ffffff');
+            fBox(hx + 131, hy + 82, 3, 2, '#ff8fab');
+        }
+
+        function drawPineTree(x, y) {
+            fBox(x + 11, y + 34, 6, 14, '#241612');
+            fBox(x + 10, y + 2, 8, 6, '#14532d');
+            fBox(x + 7, y + 8, 14, 8, '#166534');
+            fBox(x + 4, y + 16, 20, 9, '#15803d');
+            fBox(x + 1, y + 25, 26, 9, '#14532d');
+        }
+
+        function drawGardenLilyCluster(x, y, petalColor) {
+            fBox(x + 2, y + 3, 2, 8, '#22c55e');
+            fBox(x, y + 2, 6, 2, petalColor);
+            fBox(x + 2, y, 2, 3, petalColor);
+            fBox(x + 2, y + 2, 2, 1, '#ffd166');
+        }
+
+        function animateFinaleStage() {
+            fFrame++;
+
+            // 1. Céu Noturno Estrelado em Faixas Suaves
+            const skyBands = [
+                { y: 0, h: 42, c: '#0b0e1d' },
+                { y: 42, h: 38, c: '#131736' },
+                { y: 80, h: 36, c: '#1c214d' },
+                { y: 116, h: 34, c: '#292966' },
+                { y: 150, h: 28, c: '#38307a' }
+            ];
+            skyBands.forEach(b => fBox(0, b.y, FW, b.h, b.c));
+
+            // 2. Lua Cheia Luminosa com Crateras
+            drawFullMoonDetailed(240, 56, 34);
+
+            // Estrelas Cintilantes
+            fStars.forEach(s => {
+                const v = Math.sin(fFrame * 0.045 + s.phase);
+                if (v > -0.1) {
+                    fBox(s.x, s.y, s.big ? 2 : 1, s.big ? 2 : 1, v > 0.65 ? '#ffffff' : '#ffd166');
+                }
+            });
+
+            // Estrela Cadente Ocasional
+            const meteorCycle = fFrame % 320;
+            if (meteorCycle < 48) {
+                const mx = 75 + meteorCycle * 3;
+                const my = 16 + Math.floor(meteorCycle * 0.75);
+                fBox(mx, my, 3, 2, '#ffffff');
+                fBox(mx - 8, my - 2, 7, 1, 'rgba(255,255,255,0.5)');
+            }
+
+            // 3. Montanhas Suaves & Pinheiros
+            fBox(0, 152, 195, 28, '#131d33');
+            fBox(165, 148, 315, 32, '#0f172a');
+            drawPineTree(14, 124);
+            drawPineTree(48, 130);
+            drawPineTree(402, 128);
+            drawPineTree(436, 122);
+
+            // 4. Gramado em Camadas & Caminho de Pedrinhas
+            fBox(0, 174, FW, 96, '#143d2b');
+            fBox(0, 174, FW, 3, '#1e5c40');
+            fBox(0, 218, FW, 52, '#103324');
+
+            // Caminho de pedrinhas da varanda até a frente
+            fBox(222, 182, 36, 88, '#94a3b8');
+            fBox(226, 188, 9, 4, '#cbd5e1');
+            fBox(242, 198, 10, 4, '#cbd5e1');
+            fBox(228, 210, 9, 4, '#cbd5e1');
+
+            // 5. Casa dos Sonhos de 2 Andares
+            drawDreamHouse2Story(160, 68);
+
+            // Fumaça em espiral saindo da chaminé
+            if (fFrame % 22 === 0) {
+                fChimneySmoke.push({ x: 270, y: 44, alpha: 0.85 });
+            }
+            for (let i = fChimneySmoke.length - 1; i >= 0; i--) {
+                const sm = fChimneySmoke[i];
+                sm.y -= 0.22;
+                sm.x += Math.sin(fFrame * 0.04 + i) * 0.24;
+                sm.alpha -= 0.007;
+                if (sm.alpha <= 0) {
+                    fChimneySmoke.splice(i, 1);
+                } else {
+                    fCtx.fillStyle = `rgba(241, 245, 249, ${sm.alpha})`;
+                    fCtx.fillRect(Math.floor(sm.x), Math.floor(sm.y), 4, 3);
+                }
+            }
+
+            // 6. Cerquinha Branca & Jardim Florido de Lírios
+            for (let fx = 22; fx < 160; fx += 9) {
+                fBox(fx, 182, 3, 12, '#f8fafc');
+            }
+            fBox(22, 186, 138, 2, '#cbd5e1');
+
+            for (let fx = 320; fx < 458; fx += 9) {
+                fBox(fx, 182, 3, 12, '#f8fafc');
+            }
+            fBox(320, 186, 138, 2, '#cbd5e1');
+
+            drawGardenLilyCluster(95, 190, '#ffffff');
+            drawGardenLilyCluster(112, 193, '#ff9ebb');
+            drawGardenLilyCluster(129, 190, '#ffffff');
+            drawGardenLilyCluster(345, 190, '#ff9ebb');
+            drawGardenLilyCluster(362, 193, '#ffffff');
+            drawGardenLilyCluster(379, 190, '#ff9ebb');
+
+            // 7. OS QUATRO PERSONAGENS EM PIXEL ART ESTILO GBA/DS (PIPLUP + ELA + ELE + LUCARIO)
+            const breathe = Math.sin(fFrame * 0.07) > 0.2 ? -1 : 0;
+            // Piplup dá pulinhos alegres periódicos
+            const piplupCycle = fFrame % 130;
+            const piplupJump = piplupCycle < 16 ? -Math.round(Math.sin((piplupCycle / 16) * Math.PI) * 6) : 0;
+            const lucarioBreathe = Math.cos(fFrame * 0.07) > 0.2 ? -1 : 0;
+
+            // Sombras no gramado
+            fBox(166, 244, 24, 4, 'rgba(0,0,0,0.45)');
+            fBox(200, 244, 28, 4, 'rgba(0,0,0,0.45)');
+            fBox(242, 244, 28, 4, 'rgba(0,0,0,0.45)');
+            fBox(280, 244, 30, 4, 'rgba(0,0,0,0.45)');
+
+            // Piplup ao lado da treinadora
+            blitSprite(fCtx, PIPLUP_HD, POKEMON_GBA_PALETTE, 165, 224 + piplupJump, 1, false);
+            // Treinadora (cabelo cacheado castanho-avermelhado, regata preta, jeans, Vans)
+            blitSprite(fCtx, TRAINER_GIRL_HD, POKEMON_GBA_PALETTE, 200, 212 + breathe, 1, false);
+            // Treinador (óculos, bigode/cavanhaque, camiseta preta, jeans largo, Vans)
+            blitSprite(fCtx, TRAINER_BOY_HD, POKEMON_GBA_PALETTE, 242, 209 + breathe, 1, false);
+            // Lucario em pose heroica ao lado do treinador
+            blitSprite(fCtx, LUCARIO_HD, POKEMON_GBA_PALETTE, 280, 220 + lucarioBreathe, 1, false);
+
+            // Coração flutuando continuamente entre o casal
+            const heartBob = Math.round(Math.sin(fFrame * 0.08) * 3);
+            drawTinyIcon(232, 196 + heartBob, 'heart', 1);
+
+            // 8. Vagalumes Dourados na Cena Final
+            fFireflies.forEach((ff, idx) => {
+                const gx = ff.x + Math.sin(fFrame * 0.03 + ff.phase) * 6;
+                const gy = ff.y + Math.cos(fFrame * 0.025 + idx) * 3;
+                const glow = Math.sin(fFrame * 0.08 + ff.phase);
+                if (glow > 0) {
+                    fBox(gx, gy, 2, 2, '#fef08a');
+                }
+            });
+
+            // 9. Partículas Interativas (Corações, Estrelas e Notas Musicais)
+            for (let i = fFloatingHearts.length - 1; i >= 0; i--) {
+                const p = fFloatingHearts[i];
+                p.x += p.vx + Math.sin(fFrame * 0.06 + i) * 0.14;
+                p.y += p.vy;
+                p.life -= 0.011;
+                if (p.life <= 0) {
+                    fFloatingHearts.splice(i, 1);
+                } else {
+                    drawTinyIcon(p.x, p.y, p.type, p.life);
+                }
+            }
+
+            requestAnimationFrame(animateFinaleStage);
+        }
+
+        /* =========================================================================
+           6. PARTÍCULAS AMBIENTAIS DE FUNDO (VAGA-LUMES & PÉTALAS)
+           ========================================================================= */
+        const bgCanvas = document.getElementById('bgParticlesCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgParticles = [];
+
+        function resizeBgParticles() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            const total = Math.min(42, Math.floor(window.innerWidth / 32));
+            bgParticles = Array.from({ length: total }, () => ({
+                x: Math.random() * bgCanvas.width,
+                y: Math.random() * bgCanvas.height,
+                vx: (Math.random() - 0.5) * 0.35,
+                vy: 0.16 + Math.random() * 0.3,
+                isPetal: Math.random() > 0.52,
+                phase: Math.random() * Math.PI * 2
+            }));
+        }
+
+        function animateBgParticles() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgParticles.forEach(p => {
+                p.x += p.vx + Math.sin(p.phase) * 0.25;
+                p.y += p.vy;
+                p.phase += 0.025;
+
+                if (p.y > bgCanvas.height + 12) {
+                    p.y = -12;
+                    p.x = Math.random() * bgCanvas.width;
+                }
+
+                if (p.isPetal) {
+                    bgCtx.fillStyle = 'rgba(255, 182, 203, 0.45)';
+                    bgCtx.fillRect(Math.floor(p.x), Math.floor(p.y), 5, 3);
+                } else {
+                    const alpha = 0.25 + Math.abs(Math.sin(p.phase)) * 0.65;
+                    bgCtx.fillStyle = `rgba(255, 209, 102, ${alpha})`;
+                    bgCtx.fillRect(Math.floor(p.x), Math.floor(p.y), 3, 3);
+                }
+            });
+            requestAnimationFrame(animateBgParticles);
+        }
+
+        /* =========================================================================
+           7. MODAL DE EDIÇÃO E PERSISTÊNCIA
+           ========================================================================= */
+        function openEditorModal() {
+            document.getElementById('fieldRecipient').value = letterState.recipient;
+            document.getElementById('fieldBody').value = letterState.body;
+            document.getElementById('fieldSender').value = letterState.sender;
+            document.getElementById('fieldCaption').value = letterState.caption;
+
+            const modal = document.getElementById('customizerModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditorModal() {
+            const modal = document.getElementById('customizerModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveCustomLetter() {
+            letterState = {
+                recipient: document.getElementById('fieldRecipient').value.trim() || DEFAULT_DATA.recipient,
+                body: document.getElementById('fieldBody').value.trim() || DEFAULT_DATA.body,
+                sender: document.getElementById('fieldSender').value.trim() || DEFAULT_DATA.sender,
+                caption: document.getElementById('fieldCaption').value.trim() || DEFAULT_DATA.caption
+            };
+            try {
+                localStorage.setItem(LETTER_STORAGE_KEY, JSON.stringify(letterState));
+            } catch (err) {}
+            renderLetterDOM();
+            closeEditorModal();
+            showToastMessage('Carta salva com sucesso! ♥');
+            setTimeout(syncLiliesWithScroll, 100);
+        }
+
+        function restoreDefaultLetter() {
+            letterState = { ...DEFAULT_DATA };
+            try {
+                localStorage.removeItem(LETTER_STORAGE_KEY);
+            } catch (err) {}
+            document.getElementById('fieldRecipient').value = letterState.recipient;
+            document.getElementById('fieldBody').value = letterState.body;
+            document.getElementById('fieldSender').value = letterState.sender;
+            document.getElementById('fieldCaption').value = letterState.caption;
+            renderLetterDOM();
+            showToastMessage('Texto padrão restaurado!');
+        }
+
+        function showToastMessage(text) {
+            const toast = document.getElementById('feedbackToast');
+            toast.textContent = text;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2600);
+        }
+
+        /* =========================================================================
+           INICIALIZAÇÃO
+           ========================================================================= */
+        window.addEventListener('resize', resizeBgParticles);
+        window.onload = function () {
+            initCornerLilies();
+            renderLetterDOM();
+            resizeBgParticles();
+            animateBgParticles();
+            animateCoverStage();
+            animateFinaleStage();
+        };
+    </script>
+</body>
+</html>
